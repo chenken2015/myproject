@@ -30,7 +30,7 @@ public class AppController {
 	private String test;
 	
 	@Autowired
-    private Environment environment ;
+    private Environment environment;
 	
 	@GetMapping("/test")
 	public String test(){
