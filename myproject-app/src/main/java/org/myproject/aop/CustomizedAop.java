@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.validation.BeanPropertyBindingResult;
 
 
 /**
@@ -78,17 +77,13 @@ public class CustomizedAop {
 						if(null == curArg) {
 							sb.append("null");
 						}else {
-							if(curArg instanceof BeanPropertyBindingResult) {
-								sb.append("\"args[").append(i).append("]\":\"bindingResult\"");
-							}else {
-								sb.append("\"args[").append(i).append("]\":");
-								if (curArg instanceof Serializable) {
-									sb.append(JsonUtil.toJson(curArg));
-								} else if (ObjectUtil.isBaseDataType(curArg.getClass())) {
-									sb.append(curArg);
-								}
-								sb.append(",");
+							sb.append("\"args[").append(i).append("]\":");
+							if (curArg instanceof Serializable) {
+								sb.append(JsonUtil.toJson(curArg));
+							} else if (ObjectUtil.isBaseDataType(curArg.getClass())) {
+								sb.append(curArg);
 							}
+							sb.append(",");
 						}
 					}
 					sb.append("}");
