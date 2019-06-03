@@ -1,9 +1,7 @@
 package org.myproject.aop;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -23,11 +21,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.BeanPropertyBindingResult;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 
 /**
@@ -37,9 +30,9 @@ import com.google.gson.GsonBuilder;
  */
 @Component
 @Aspect
-public class CustomerAop {
+public class CustomizedAop {
 	
-	private static final Logger log = LoggerFactory.getLogger(CustomerAop.class); 
+	private static final Logger log = LoggerFactory.getLogger(CustomizedAop.class); 
 
 	@Pointcut("execution(public * org.myproject.controller..*.*(..))")
 	public void handlerMethods() {}
@@ -55,33 +48,14 @@ public class CustomerAop {
 		
 		beforeProcessLog(joinPoint,path,method,threadId);
 		
-		BindingResult bindingResult = null;
-		for (Object arg : joinPoint.getArgs()) {
-			if (arg instanceof BindingResult) {
-				bindingResult = (BindingResult) arg;
-			}
-		}
-		if (bindingResult != null) {
-			if (bindingResult.hasErrors()) {
-				List<FieldError> fieldErrors = bindingResult.getFieldErrors();
-				List<String> validateErrorInfos = new ArrayList<String>();
-				for (FieldError fieldError : fieldErrors) {
-					validateErrorInfos.add(fieldError.getField()+fieldError.getDefaultMessage());
-				}
-				Gson gson = new GsonBuilder().create();
-				String resultJson = gson.toJson(validateErrorInfos);
-				throw new CustomerRuntimeException(resultJson);
-			}
-		}
 		Object result = null;
 		try {
 			result = joinPoint.proceed();
 			long cost = System.currentTimeMillis() - startTime;
-			String outMsg = StringUtil.join("["+threadId+"][HTTP-RESP]. path=\"", path, "\", method=[", method,"] ; cost ", cost, " ms");
+			String outMsg = StringUtil.join("[",threadId,"][HTTP-RESP].path=\"", path, "\", method=[", method,"] ; cost ", cost, " ms");
 			afterProcessLog(path,method,outMsg,result,cost);
 		}catch (Throwable e) {
-			String exceptionMsg = StringUtil.join("["+threadId+"][HTTP-REQ-FAIL]. path=\"", path, "\", method=[",
-					method, "] ; cost ", System.currentTimeMillis() - startTime, " ms.");
+			String exceptionMsg = StringUtil.join("[",threadId,"][HTTP-REQ-FAIL]. path=\"", path, "\", method=[",method, "] ; cost ", System.currentTimeMillis() - startTime, " ms.");
 			log.error(exceptionMsg);
 			throw new CustomerRuntimeException(e);
 		}
@@ -90,13 +64,15 @@ public class CustomerAop {
 	
 	private void beforeProcessLog(ProceedingJoinPoint joinPoint,String path,String method,String threadId) {
 		Object[] args = joinPoint.getArgs();
-		if (log.isInfoEnabled()) {
+		if (!log.isInfoEnabled()) {
+			log.info(StringUtil.join("[",threadId,"][HTTP-REQ]. path=/",path,"method=[",method,"]"));
+		}else {
 			if (null != args) {
 				if (args.length == 1 && args[0] instanceof Serializable) {
-					log.info("["+threadId+"][HTTP-REQ].path=\""+path+"\", method=["+method+"]. args={" + JsonUtil.toJson(args[0])+"}");
+					log.info(StringUtil.join("[",threadId,"][HTTP-REQ].path=\"",path,"\", method=[",method,"]. args={",JsonUtil.toJson(args[0]),"}"));
 				} else if (args.length >= 1) {
 					StringBuilder sb = new StringBuilder();
-					sb.append("["+threadId+"][HTTP-REQ].path=\""+path+"\", method=["+method+"]. args={");
+					sb.append(StringUtil.join("[",threadId,"][HTTP-REQ].path=\"",path,"\", method=[",method,"]. args={"));
 					for (int i = 0; i < args.length; i++) {
 						Object curArg = args[i];
 						if(null == curArg) {
@@ -118,9 +94,9 @@ public class CustomerAop {
 					sb.append("}");
 					log.info(sb.toString());
 				}
+			}else {
+				log.info(StringUtil.join("[",threadId,"][HTTP-REQ]. path=/",path,"method=[",method,"]"));
 			}
-		}else {
-			log.info("["+threadId+"][HTTP-REQ]. path=/"+path+"method=["+method+"]");
 		}
 	}
 	
@@ -130,7 +106,7 @@ public class CustomerAop {
 		}else {
 			boolean jsonSerializable = false;
 			if (null == result) {
-				log.info(outMsg+";[http-response-status-code]=" + HttpStatus.OK+". response=void\"");
+				log.info(StringUtil.join(outMsg,";[http-response-status-code]=" , HttpStatus.OK,". response=void\""));
 			}else {
 				if (result instanceof Serializable) {
 					jsonSerializable = true;
@@ -142,9 +118,9 @@ public class CustomerAop {
 					jsonSerializable = true;
 				}
 				if (jsonSerializable) {
-					log.info(outMsg+";[http-response-status-code]=" + HttpStatus.OK.value() +",response=" + JsonUtil.toJson(result));
+					log.info(StringUtil.join(outMsg,";[http-response-status-code]=" ,HttpStatus.OK.value() ,",response=" , JsonUtil.toJson(result)));
 				}else {
-					log.info(outMsg+";[http-response-status-code]=" + HttpStatus.OK.value());
+					log.info(StringUtil.join(outMsg,";[http-response-status-code]=" , HttpStatus.OK.value()));
 				}
 			}
 		}

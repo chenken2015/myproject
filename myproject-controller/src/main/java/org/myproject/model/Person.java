@@ -11,16 +11,21 @@ import javax.validation.constraints.NotNull;
 
 public class Person implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7707863267845573072L;
+
 	@Valid
 	private List<Skill> skills;
 	
-	@NotBlank(message = "不能为空")
+	@NotBlank(message = "name不能为空")
 	private String name;
 	
 	
-	@NotNull(message = "不能为空")
-	@Max(value = 150,message = "不能大于150")
-	@Min(value = 10,message = "不能小于10")
+	@NotNull(message = "age不能为空")
+	@Max(value = 150,message = "age不能大于150")
+	@Min(value = 10,message = "age不能小于10")
 	private Integer age;
 	
 	public List<Skill> getSkills() {
@@ -45,6 +50,11 @@ public class Person implements Serializable{
 
 	public void setAge(Integer age) {
 		this.age = age;
+	}
+
+	@Override
+	public String toString() {
+		return "Person [skills=" + skills + ", name=" + name + ", age=" + age + "]";
 	}
 	
 }

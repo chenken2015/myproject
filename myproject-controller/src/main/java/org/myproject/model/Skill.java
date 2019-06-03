@@ -4,7 +4,7 @@ import javax.validation.constraints.NotBlank;
 
 public class Skill {
 
-	@NotBlank(message = "不能为空")
+	@NotBlank(message = "Skill.name 不能为空")
 	private String name;
 
 	public String getName() {
@@ -13,6 +13,11 @@ public class Skill {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	@Override
+	public String toString() {
+		return "Skill [name=" + name + "]";
 	}
 	
 }
